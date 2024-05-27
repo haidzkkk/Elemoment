@@ -1,11 +1,12 @@
 
 import 'package:elemoment/features/data/models/response/message.dart';
 import 'package:elemoment/features/presentation/components/utility/date_converter.dart';
-import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
+
+import '../../../components/utility/ultilies.dart';
 
 class ItemChat extends StatefulWidget {
   const ItemChat({
@@ -54,11 +55,17 @@ class _ItemChatState extends State<ItemChat> {
         Container(
             margin: padding,
             clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadiusDirectional.all(Radius.circular(10))
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadiusDirectional.all(Radius.circular(10))
             ),
             child: contentWidget()
         ),
+        if(widget.data.statusLocal == MessageStatusLocal.sending || widget.data.statusLocal == MessageStatusLocal.sentFail)
+          Padding(
+            padding: padding,
+            child: Text(widget.data.statusLocal == MessageStatusLocal.sending ? "Đang giử" : "Giử thất bại",
+              style: const TextStyle(fontSize: 8),),
+          ),
       ],
     );
   }
@@ -175,7 +182,7 @@ class _ItemChatState extends State<ItemChat> {
         );
       }
       case MessageContentMessageType.video: {
-        String url = widget.data.getUrlMedia(widget.data.content?.url);
+        String url = getUrlMedia(widget.data.content?.url);
         if(videoPlayerController == null){
           videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(url));
           videoPlayerController!.initialize().then((_){
@@ -193,7 +200,7 @@ class _ItemChatState extends State<ItemChat> {
                         ? VideoPlayer(videoPlayerController!)
                         : Stack(
                           children: [
-                            Positioned.fill(child: Image.network(widget.data.getUrlMedia(widget.data.content?.info?.thumbnailUrl), fit: BoxFit.cover)),
+                            Positioned.fill(child: Image.network(getUrlMedia(widget.data.content?.info?.thumbnailUrl), fit: BoxFit.cover)),
                             const Center(child: Icon(Icons.play_circle, size: 40,)),
                           ],
                         )
@@ -205,7 +212,7 @@ class _ItemChatState extends State<ItemChat> {
           width: Get.width * 0.7,
           color: Colors.grey,
           child: Image.network(
-              widget.data.getUrlMedia(widget.data.content?.url),
+              getUrlMedia(widget.data.content?.url),
               fit: BoxFit.fill
           ),
         );
@@ -216,9 +223,6 @@ class _ItemChatState extends State<ItemChat> {
 
 
   Widget typeContentMember() {
-    if(widget.data.prevContent != null ){
-      return Text("${widget.data.prevContent?.displayname} đã đổi tên thành ${widget.data.content?.displayname}");
-    }
 
     switch(widget.data.content?.membership) {
       case MessageContentMemberType.invite:{

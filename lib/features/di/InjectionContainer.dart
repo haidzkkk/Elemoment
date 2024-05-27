@@ -1,11 +1,14 @@
 import 'package:elemoment/features/data/api/api_client.dart';
 import 'package:elemoment/features/data/repositories/auth_repo.dart';
+import 'package:elemoment/features/data/repositories/message_offline_repo.dart';
 import 'package:elemoment/features/data/repositories/message_repo.dart';
 import 'package:elemoment/features/data/repositories/room_repo.dart';
 import 'package:elemoment/features/data/repositories/splash_repo.dart';
 import 'package:elemoment/features/presentation/blocs/room/room_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:hive/hive.dart';
 import '../../core/env/config.dart';
+import '../data/repositories/room_offline_repo.dart';
 import '../presentation/blocs/auth/auth_bloc.dart';
 import '../presentation/blocs/home/home_bloc.dart';
 import '../presentation/blocs/splash/splash_bloc.dart';
@@ -37,12 +40,14 @@ Future<void> init() async {
   ///
   sl.registerFactory(() => SplashBloc());
   sl.registerFactory(() => AuthBloc(repo: sl()));
-  sl.registerFactory(() => HomeBloc(roomRepo: sl()));
-  sl.registerFactory(() => RoomBloc(messageRepo: sl()));
+  sl.registerFactory(() => HomeBloc(roomRepo: sl(), roomOfflineRepo: sl(), messageOfflineRepo: sl()));
+  sl.registerFactory(() => RoomBloc(messageRepo: sl(), messageOfflineRepo: sl()));
 
   ///[Repository]
   sl.registerFactory(() => SplashRepo(apiClient: sl(), sharedPreferences: sl()));
   sl.registerFactory(() => AuthRepo(apiClient: sl(), sharedPreferences: sl()));
   sl.registerFactory(() => RoomRepo(apiClient: sl(), sharedPreferences: sl()));
+  sl.registerFactory(() => RoomOfflineRepo());
   sl.registerFactory(() => MessageRepo(apiClient: sl(), sharedPreferences: sl()));
+  sl.registerFactory(() => MessageOfflineRepo());
 }
