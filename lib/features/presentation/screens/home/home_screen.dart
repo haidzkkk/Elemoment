@@ -1,4 +1,5 @@
 import 'package:elemoment/features/data/models/response/room.dart';
+import 'package:elemoment/features/data/repositories/room_offline_repo.dart';
 import 'package:elemoment/features/presentation/blocs/home/home_bloc.dart';
 import 'package:elemoment/features/presentation/blocs/home/home_event.dart';
 import 'package:elemoment/features/presentation/blocs/home/home_state.dart';
@@ -6,6 +7,10 @@ import 'package:elemoment/features/presentation/screens/home/widget/item_room.da
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/adapters.dart';
+
+import '../../blocs/auth/auth_bloc.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     context.read<HomeBloc>().add(GetRoomHomeEvent());
-    super.initState();
+     super.initState();
   }
 
   @override
@@ -108,7 +113,9 @@ class _HomeScreenState extends State<HomeScreen> {
               )
             ];
           },
-          body: BlocBuilder<HomeBloc, HomeSate>(
+          body: BlocConsumer<HomeBloc, HomeSate>(
+            listener: (context, state) {
+            },
             builder: (context, state) {
               List<String> myRoomIds = state.rooms.keys.toList();
 
@@ -132,7 +139,31 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             }
           ),
-        )
+        ),
+      // body: ValueListenableBuilder(
+      //   valueListenable: Hive.box(RoomOfflineRepo.roomBoxName).listenable(),
+      //   builder: (BuildContext context, value, Widget? child) {
+      //     List myRoomIds = value.keys.toList();
+      //     return MediaQuery.removePadding(
+      //       context: context,
+      //       removeTop: true,
+      //       child: ListView.builder(
+      //           itemCount: myRoomIds.length,
+      //           shrinkWrap: true,
+      //           physics: const NeverScrollableScrollPhysics(),
+      //           itemBuilder: (context, index){
+      //             String roomId = myRoomIds[index];
+      //             Room currentRoom = Room.fromJson(value.values.toList()[index]!);
+      //
+      //             return ItemRoom(
+      //               roomId: roomId,
+      //               data: currentRoom,
+      //             );
+      //           }
+      //       ),
+      //     );
+      //   },
+      // ),
     );
   }
 

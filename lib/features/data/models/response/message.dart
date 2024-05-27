@@ -1,5 +1,6 @@
 
 import 'package:elemoment/features/common/constants/app_constants.dart';
+import 'package:equatable/equatable.dart';
 
 class MessageType{
   static const String member  = "m.room.member";
@@ -21,6 +22,11 @@ class MessageType{
   static const String create  = "m.room.create";
 }
 
+class MessageStatusLocal{
+  static const String sending  = "sending";
+  static const String sentFail  = "sent_fail";
+}
+
 class MessageContentMessageType{
   static const String text = "m.text";
   static const String video = "m.video";
@@ -33,7 +39,7 @@ class MessageContentMemberType{
   static const String join = "join";
 }
 
-class Message {
+class Message extends Equatable implements Comparable{
   Content? content;
   int? originServerTs;
   String? roomId;
@@ -47,24 +53,12 @@ class Message {
   String? replacesState;
   PrevContent? prevContent;
 
-  String getUrlMedia(String? url){
-    if(url == null) return "";
-    String baseUrl = AppConstants.BASE_URL + AppConstants.MEDIA_DATA;
-    List<String> urls = url.split("/");
+  String? statusLocal;
 
-    if(urls.isEmpty){
-      return "";
-    }else if(urls.length == 1){
-      return url;
-    }else{
-      String mediaUrl = "$baseUrl/${urls[urls.length - 2]}/${urls.last}";
-      return mediaUrl;
-    }
-  }
+  Message({this.content, this.originServerTs, this.roomId, this.statusLocal, this.sender, this.stateKey, this.type, this.unsigned, this.eventId, this.userId, this.age, this.replacesState, this.prevContent});
 
-  Message({this.content, this.originServerTs, this.roomId, this.sender, this.stateKey, this.type, this.unsigned, this.eventId, this.userId, this.age, this.replacesState, this.prevContent});
 
-  Message.fromJson(Map<String, dynamic> json) {
+  Message.fromJson(Map<dynamic, dynamic> json) {
     content = json['content'] != null ? Content.fromJson(json['content']) : null;
     originServerTs = json['origin_server_ts'];
     roomId = json['room_id'];
@@ -101,9 +95,32 @@ class Message {
     }
     return data;
   }
+
+  @override
+  int compareTo(other) {
+    // TODO: implement compareTo
+    throw UnimplementedError();
+  }
+
+  @override
+  List<Object?> get props => [
+    content,
+    originServerTs,
+    roomId,
+    sender,
+    stateKey,
+    type,
+    unsigned,
+    eventId,
+    userId,
+    age,
+    replacesState,
+    prevContent,
+  ];
+  
 }
 
-class Content {
+class Content extends Equatable{
   String? displayname;
   String? membership;
   String? body;
@@ -129,7 +146,7 @@ class Content {
 
   Content({this.displayname, this.membership, this.body, this.info, this.msgtype, this.url, this.mMentions, this.callId, this.partyId, this.reason, this.version, this.candidates, this.description, this.lifetime, this.answer, this.selectedPartyId, this.offer, this.creatorUserId, this.data, this.id, this.name, this.type});
 
-  Content.fromJson(Map<String, dynamic> json) {
+  Content.fromJson(Map<dynamic, dynamic> json) {
     displayname = json['displayname'];
     membership = json['membership'];
     body = json['body'];
@@ -197,6 +214,32 @@ class Content {
     data['type'] = type;
     return data;
   }
+
+  @override
+  List<Object?> get props => [
+  displayname,
+  membership,
+  body,
+  info,
+  msgtype,
+  url,
+  mMentions,
+  callId,
+  partyId,
+  reason,
+  version,
+  candidates,
+  description,
+  lifetime,
+  answer,
+  selectedPartyId,
+  offer,
+  creatorUserId,
+  data,
+  id,
+  name,
+  type,
+  ];
 }
 
 class Info {
@@ -271,10 +314,9 @@ class ThumbnailInfo {
 
 class Mentions {
 
-
   Mentions();
 
-  Mentions.fromJson(Map<String, dynamic> json) {
+  Mentions.fromJson(Map<dynamic, dynamic> json) {
   }
 
   Map<String, dynamic> toJson() {
@@ -354,7 +396,7 @@ class Unsigned {
 
   Unsigned({this.replacesState, this.prevContent, this.prevSender, this.age});
 
-  Unsigned.fromJson(Map<String, dynamic> json) {
+  Unsigned.fromJson(Map<dynamic, dynamic> json) {
     replacesState = json['replaces_state'];
     prevContent = json['prev_content'] != null ? PrevContent.fromJson(json['prev_content']) : null;
     prevSender = json['prev_sender'];
@@ -373,7 +415,7 @@ class Unsigned {
   }
 }
 
-class PrevContent {
+class PrevContent extends Equatable{
   String? displayname;
   String? membership;
   String? creatorUserId;
@@ -385,7 +427,7 @@ class PrevContent {
 
   PrevContent({this.displayname, this.membership, this.creatorUserId, this.data, this.id, this.name, this.type, this.url});
 
-  PrevContent.fromJson(Map<String, dynamic> json) {
+  PrevContent.fromJson(Map<dynamic, dynamic> json) {
     displayname = json['displayname'];
     membership = json['membership'];
     creatorUserId = json['creatorUserId'];
@@ -410,4 +452,16 @@ class PrevContent {
     data['url'] = url;
     return data;
   }
+
+  @override
+  List<Object?> get props => [
+  displayname,
+  membership,
+  creatorUserId,
+  data,
+  id,
+  name,
+  type,
+  url,
+  ];
 }

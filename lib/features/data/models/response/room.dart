@@ -1,4 +1,11 @@
-class Room {
+import 'package:elemoment/features/data/models/response/message.dart';
+import 'package:elemoment/features/presentation/components/utility/ultilies.dart';
+import 'package:equatable/equatable.dart';
+import 'package:get/get.dart';
+
+import '../../../presentation/components/utility/date_converter.dart';
+
+class Room extends Equatable{
   Timeline? timeline;
   StateRoom? state;
   AccountData? accountData;
@@ -14,34 +21,43 @@ class Room {
         this.unreadNotifications,
         this.summary});
 
-  String getDisplayName(){
-    String? name;
+  String getDisplayName(String userId){
+    var myList = [...timeline?.events ?? [], ...state?.events ?? []];
+    String? name = myList.firstWhereOrNull((element) => element?.type == "m.room.name")?.content?.name;
+    name ??= myList.firstWhereOrNull((element) => element.type == "m.room.member" && element.sender != userId)?.content?.displayname;
+    return name ?? "";
+  }
 
-    if(timeline!.events != null){
-      for(var element in timeline!.events!){
-        name = element.content?.name;
-        if(name != null)break;
-      }
-      if(name == null){
-        if(state!.events != null){
-          for(var element in state!.events!){
-            name = element.content?.name;
-            if(name != null)break;
-          }
-          if(name == null){
-            if(name == null){
-              if(state!.events != null){
-                for(var element in state!.events!){
-                  name = element.content?.displayname;
-                  if(name != null)break;
-                }
-              }
-            }
-          }
-        }
-      }
+  String? getAvatar(){
+    var myList = [...timeline?.events ?? [], ...state?.events ?? []];
+    String? url = myList.firstWhereOrNull((element) => element?.type == "m.room.avatar")?.content?.url;
+    if(url != null){
+      url = getUrlMedia(url);
     }
-    return name ?? "Not found";
+    return url;
+  }
+
+  Map<String, String> getMessage(String userId){
+    var myList = [...timeline?.events ?? []].reversed.toList();
+    Message? event = myList.firstWhereOrNull((element) => element.type == "m.room.message");
+
+    String content = '';
+    String time = '';
+
+    if(event?.sender == userId){
+      content = "bạn: ";
+    }
+    if(event?.content?.msgtype == MessageContentMessageType.text){
+      content = content + (event?.content?.body ?? "");
+    }else if(event?.content?.msgtype == MessageContentMessageType.image){
+      content = content + "đã giử ảnh";
+    }else if(event?.content?.msgtype == MessageContentMessageType.image){
+      content = content + "đã giử video";
+    }
+
+    time = DateConverter.millisecondsSinceEpochHourString(event?.originServerTs);
+
+    return {'content': content, 'time': time};
   }
 
   Room.fromJson(Map<String, dynamic> json) {
@@ -84,10 +100,13 @@ class Room {
     }
     return data;
   }
+
+  @override
+  List<Object?> get props => [timeline, state];
 }
 
-class Timeline {
-  List<Events>? events;
+class Timeline extends Equatable{
+  List<Message>? events;
   String? prevBatch;
   bool? limited;
 
@@ -95,9 +114,9 @@ class Timeline {
 
   Timeline.fromJson(Map<String, dynamic> json) {
     if (json['events'] != null) {
-      events = <Events>[];
+      events = <Message>[];
       json['events'].forEach((v) {
-        events!.add(Events.fromJson(v));
+        events!.add(Message.fromJson(v));
       });
     }
     prevBatch = json['prev_batch'];
@@ -113,261 +132,13 @@ class Timeline {
     data['limited'] = limited;
     return data;
   }
-}
 
-class Events {
-  Content? content;
-  int? originServerTs;
-  String? sender;
-  String? stateKey;
-  String? type;
-  Unsigned? unsigned;
-  String? eventId;
-
-  Events(
-      {this.content,
-        this.originServerTs,
-        this.sender,
-        this.stateKey,
-        this.type,
-        this.unsigned,
-        this.eventId});
-
-  Events.fromJson(Map<String, dynamic> json) {
-    content =
-    json['content'] != null ? Content.fromJson(json['content']) : null;
-    originServerTs = json['origin_server_ts'];
-    sender = json['sender'];
-    stateKey = json['state_key'];
-    type = json['type'];
-    unsigned = json['unsigned'] != null
-        ? Unsigned.fromJson(json['unsigned'])
-        : null;
-    eventId = json['event_id'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    if (content != null) {
-      data['content'] = content!.toJson();
-    }
-    data['origin_server_ts'] = originServerTs;
-    data['sender'] = sender;
-    data['state_key'] = stateKey;
-    data['type'] = type;
-    if (unsigned != null) {
-      data['unsigned'] = unsigned!.toJson();
-    }
-    data['event_id'] = eventId;
-    return data;
-  }
-}
-
-class Content {
-  String? creator;
-  String? roomVersion;
-  String? displayname;
-  String? membership;
-  int? ban;
-  EventsContent? events;
-  int? eventsDefault;
-  int? historical;
-  int? invite;
-  int? kick;
-  int? redact;
-  int? stateDefault;
-  Users? users;
-  int? usersDefault;
-  String? joinRule;
-  String? historyVisibility;
-  String? guestAccess;
-  String? algorithm;
-  String? name;
-
-  Content(
-      {this.creator,
-        this.roomVersion,
-        this.displayname,
-        this.membership,
-        this.ban,
-        this.events,
-        this.eventsDefault,
-        this.historical,
-        this.invite,
-        this.kick,
-        this.redact,
-        this.stateDefault,
-        this.users,
-        this.usersDefault,
-        this.joinRule,
-        this.historyVisibility,
-        this.guestAccess,
-        this.algorithm,
-        this.name});
-
-  Content.fromJson(Map<String, dynamic> json) {
-    creator = json['creator'];
-    roomVersion = json['room_version'];
-    displayname = json['displayname'];
-    membership = json['membership'];
-    ban = json['ban'];
-    events =
-    json['events'] != null ? EventsContent.fromJson(json['events']) : null;
-    eventsDefault = json['events_default'];
-    historical = json['historical'];
-    invite = json['invite'];
-    kick = json['kick'];
-    redact = json['redact'];
-    stateDefault = json['state_default'];
-    users = json['users'] != null ? Users.fromJson(json['users']) : null;
-    usersDefault = json['users_default'];
-    joinRule = json['join_rule'];
-    historyVisibility = json['history_visibility'];
-    guestAccess = json['guest_access'];
-    algorithm = json['algorithm'];
-    name = json['name'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['creator'] = creator;
-    data['room_version'] = roomVersion;
-    data['displayname'] = displayname;
-    data['membership'] = membership;
-    data['ban'] = ban;
-    if (events != null) {
-      data['events'] = events!.toJson();
-    }
-    data['events_default'] = eventsDefault;
-    data['historical'] = historical;
-    data['invite'] = invite;
-    data['kick'] = kick;
-    data['redact'] = redact;
-    data['state_default'] = stateDefault;
-    if (users != null) {
-      data['users'] = users!.toJson();
-    }
-    data['users_default'] = usersDefault;
-    data['join_rule'] = joinRule;
-    data['history_visibility'] = historyVisibility;
-    data['guest_access'] = guestAccess;
-    data['algorithm'] = algorithm;
-    data['name'] = name;
-    return data;
-  }
-}
-
-class EventsContent {
-  int? mRoomAvatar;
-  int? mRoomCanonicalAlias;
-  int? mRoomEncryption;
-  int? mRoomHistoryVisibility;
-  int? mRoomName;
-  int? mRoomPowerLevels;
-  int? mRoomServerAcl;
-  int? mRoomTombstone;
-
-  EventsContent(
-      {this.mRoomAvatar,
-        this.mRoomCanonicalAlias,
-        this.mRoomEncryption,
-        this.mRoomHistoryVisibility,
-        this.mRoomName,
-        this.mRoomPowerLevels,
-        this.mRoomServerAcl,
-        this.mRoomTombstone});
-
-  EventsContent.fromJson(Map<String, dynamic> json) {
-    mRoomAvatar = json['m.room.avatar'];
-    mRoomCanonicalAlias = json['m.room.canonical_alias'];
-    mRoomEncryption = json['m.room.encryption'];
-    mRoomHistoryVisibility = json['m.room.history_visibility'];
-    mRoomName = json['m.room.name'];
-    mRoomPowerLevels = json['m.room.power_levels'];
-    mRoomServerAcl = json['m.room.server_acl'];
-    mRoomTombstone = json['m.room.tombstone'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['m.room.avatar'] = mRoomAvatar;
-    data['m.room.canonical_alias'] = mRoomCanonicalAlias;
-    data['m.room.encryption'] = mRoomEncryption;
-    data['m.room.history_visibility'] = mRoomHistoryVisibility;
-    data['m.room.name'] = mRoomName;
-    data['m.room.power_levels'] = mRoomPowerLevels;
-    data['m.room.server_acl'] = mRoomServerAcl;
-    data['m.room.tombstone'] = mRoomTombstone;
-    return data;
-  }
-}
-
-class Users {
-  int? bekoi10a6MatrixOrg;
-
-  Users({this.bekoi10a6MatrixOrg});
-
-  Users.fromJson(Map<String, dynamic> json) {
-    bekoi10a6MatrixOrg = json['@bekoi10a6:matrix.org'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['@bekoi10a6:matrix.org'] = bekoi10a6MatrixOrg;
-    return data;
-  }
-}
-
-class Unsigned {
-  int? age;
-  String? replacesState;
-  PrevContent? prevContent;
-  String? prevSender;
-
-  Unsigned({this.age, this.replacesState, this.prevContent, this.prevSender});
-
-  Unsigned.fromJson(Map<String, dynamic> json) {
-    age = json['age'];
-    replacesState = json['replaces_state'];
-    prevContent = json['prev_content'] != null
-        ? PrevContent.fromJson(json['prev_content'])
-        : null;
-    prevSender = json['prev_sender'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['age'] = age;
-    data['replaces_state'] = replacesState;
-    if (prevContent != null) {
-      data['prev_content'] = prevContent!.toJson();
-    }
-    data['prev_sender'] = prevSender;
-    return data;
-  }
-}
-
-class PrevContent {
-  String? displayname;
-  String? membership;
-
-  PrevContent({this.displayname, this.membership});
-
-  PrevContent.fromJson(Map<String, dynamic> json) {
-    displayname = json['displayname'];
-    membership = json['membership'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['displayname'] = displayname;
-    data['membership'] = membership;
-    return data;
-  }
+  @override
+  List<Object?> get props => [events, prevBatch, limited];
 }
 
 class StateRoom {
-  List<EventsAccountData>? events;
+  List<Message>? events;
 
   StateRoom({this.events});
 
@@ -375,7 +146,7 @@ class StateRoom {
     if (json['events'] != null) {
       events = [];
       json['events'].forEach((v) {
-        events!.add(EventsAccountData.fromJson(v));
+        events!.add(Message.fromJson(v));
       });
     }
   }
@@ -390,15 +161,15 @@ class StateRoom {
 }
 
 class AccountData {
-  List<EventsAccountData>? events;
+  List<Message>? events;
 
   AccountData({this.events});
 
   AccountData.fromJson(Map<String, dynamic> json) {
     if (json['events'] != null) {
-      events = <EventsAccountData>[];
+      events = <Message>[];
       json['events'].forEach((v) {
-        events!.add(EventsAccountData.fromJson(v));
+        events!.add(Message.fromJson(v));
       });
     }
   }
@@ -407,28 +178,6 @@ class AccountData {
     final Map<String, dynamic> data = <String, dynamic>{};
     if (events != null) {
       data['events'] = events!.map((v) => v.toJson()).toList();
-    }
-    return data;
-  }
-}
-
-class EventsAccountData {
-  String? type;
-  Content? content;
-
-  EventsAccountData({this.type, this.content});
-
-  EventsAccountData.fromJson(Map<String, dynamic> json) {
-    type = json['type'];
-    content =
-    json['content'] != null ? Content.fromJson(json['content']) : null;
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['type'] = type;
-    if (content != null) {
-      data['content'] = content!.toJson();
     }
     return data;
   }

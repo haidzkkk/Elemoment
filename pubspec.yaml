@@ -53,7 +53,6 @@ dependencies:
   font_awesome_flutter: ^10.7.0
   flutter_launcher_icons: ^0.13.1
   video_player: ^2.8.5
-  flick_video_player: ^0.5.0
 
 flutter_launcher_icons:
   android: "launcher_icon"

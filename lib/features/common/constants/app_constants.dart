@@ -9,8 +9,9 @@ class AppConstants{
 
   static const String GET_CURRENT_USER = '/';
   static const String LOGIN_URI = '/_matrix/client/r0/login';
-  static const String GET_ROOM = '/_matrix/client/v3/sync';
-  static const String GET_MESSAGE = '/_matrix/client/v3/rooms/';
+  static const String GET_SYNC = '/_matrix/client/v3/sync';
+  static const String ROOM = '/_matrix/client/v3/rooms';
+  static const String SEND_MESSAGE = '/send';
   static const String MEDIA_DATA = '/_matrix/media/v3/download';
 
   /// sharepreferent key
@@ -20,6 +21,7 @@ class AppConstants{
   static const String LANGUAGE_CODE = 'language_code';
   static const String MODULE_ID = 'moduleId';
   static const String LOCALIZATION_KEY = 'X-localization';
+  static const String SINCE = 'abcokhihi-since';
   /// language
   static List<LanguageModel> languages = [
     LanguageModel(

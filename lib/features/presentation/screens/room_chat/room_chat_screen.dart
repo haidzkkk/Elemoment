@@ -4,11 +4,14 @@ import 'package:elemoment/features/presentation/blocs/room/room_bloc.dart';
 import 'package:elemoment/features/presentation/blocs/room/room_event.dart';
 import 'package:elemoment/features/presentation/blocs/room/room_state.dart';
 import 'package:elemoment/features/presentation/components/utility/snackbar.dart';
-import 'package:elemoment/features/presentation/screens/room_chat/widget/list_chat_widget.dart';
+import 'package:elemoment/features/presentation/screens/room_chat/list_chat_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
+
+import '../../blocs/auth/auth_bloc.dart';
+import 'bottom_chat_widget.dart';
 
 class RoomChatScreen extends StatefulWidget {
   const RoomChatScreen({super.key, required this.roomId});
@@ -21,11 +24,12 @@ class RoomChatScreen extends StatefulWidget {
 
 class _RoomChatScreenState extends State<RoomChatScreen> {
   late RoomBloc roomBloc;
+  String userId = "";
 
   @override
   void initState() {
     super.initState();
-
+    userId = context.read<AuthBloc>().state.userId;
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       roomBloc = context.read<RoomBloc>();
 
@@ -64,12 +68,14 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
                 ),
               ),
               const SizedBox(width: 10,),
-              Expanded(child: Text(state.currentRoom?.getDisplayName() ?? "...",
-                style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16
-                ),
-              )),
+              Expanded(
+                  child: Text(state.currentRoom?.getDisplayName(userId) ?? "...",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16
+                    ),
+                  )
+              ),
             ],
           );
         }),
@@ -106,14 +112,11 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
       ),
       body: Column(
         children: [
-          ListChatWidget(),
-          bottomChat()
+          ListChatWidget(userId: userId),
+          BottomChatWidget(userId: userId, roomId: widget.roomId)
         ],
-      ),
-    );
-  }
+  ),
+  );
+}
 
-  Widget bottomChat(){
-    return Container();
-  }
 }

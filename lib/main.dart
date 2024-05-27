@@ -4,11 +4,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/adapters.dart';
 
 import 'app.dart';
 import 'core/env/config.dart';
 import 'core/env/flavor.dart';
+import 'features/data/repositories/message_offline_repo.dart';
+import 'features/data/repositories/room_offline_repo.dart';
 import 'features/di/InjectionContainer.dart' as di;
+import 'features/presentation/components/utility/hive_manager.dart';
 import 'features/presentation/components/utility/observer.dart';
 
 ///[get debug mode]
@@ -19,6 +24,7 @@ bool get isInDebugMode {
 }
 
 Future<void> main() async {
+
   /// [Catch some error]
   FlutterError.onError = (FlutterErrorDetails details) async {
     if (!kReleaseMode) {
@@ -31,6 +37,10 @@ Future<void> main() async {
   /// [run apps] with catch error
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+
+    await Hive.initFlutter();
+    await HiveManager().init();
+
     await getFlavorSetting();
     await di.init();
     // await disableLendscapeMode(); /// [deprecated]
